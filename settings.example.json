@@ -1,0 +1,10 @@
+{
+  "server_url": "https://0111.nl/lab-1/laptops/api.php",
+  "api_key": "VUL-HIER-DE-API_KEY-UIT-php/config.php-IN",
+  "videos_dir": "videos",
+  "poll_seconds": 3,
+  "rescan_seconds": 30,
+  "request_timeout": 6,
+  "website_url": "https://0111.nl/lab-1/lobby-video/",
+  "browser_path": ""
+}

@@ -1,0 +1,41 @@
+# ── door de speler zelf aangemaakt (per laptop) ─────────────────────────
+# laatste opdracht, voor herstart
+state.json
+# logboek (met rotatie)
+player.log*
+# eigen Edge/Chrome-profiel voor website-modus
+browser_profile/
+# bevat de API-sleutel; gebruik settings.example.json als basis
+settings.json
+
+# ── video's horen op de laptop, niet in git ──────────────────────────────
+videos/*
+!videos/.gitkeep
+
+# ── Python ───────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# ── virtuele omgevingen ──────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── editors en OS ────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ── libmpv naast player.py (download apart) ──────────────────────────────
+libmpv-2.dll
+mpv-*.dll
