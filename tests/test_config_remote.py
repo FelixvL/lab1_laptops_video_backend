@@ -27,10 +27,14 @@ def test_load_config_defaults_without_file(tmp_path: Path) -> None:
 
 def test_state_roundtrip(tmp_path: Path) -> None:
     p = tmp_path / "state.json"
-    st = State(mode="website", video="a/b.mp4", url="https://voorbeeld.nl", seq=7, rescan=2)
+    st = State(video="a/b.mp4", seq=7, rescan=2, overlay={"aan": True, "modus": "avond", "geschiedenis": 45},
+               positions={"a/b.mp4": 123.4, "c.mp4": 0.0}, seek_n=3)
     assert st.save(p)
     back = State.load(p)
-    assert (back.mode, back.video, back.url, back.seq, back.rescan) == ("website", "a/b.mp4", "https://voorbeeld.nl", 7, 2)
+    assert (back.video, back.seq, back.rescan, back.seek_n) == ("a/b.mp4", 7, 2, 3)
+    assert back.positions == {"a/b.mp4": 123.4}       # 0 wordt niet bewaard
+    assert (back.overlay["aan"], back.overlay["modus"], back.overlay["geschiedenis"]) == (True, "avond", 45)
+    assert back.overlay["uitlijning"]["titel"] == {"x": 0, "y": 3, "s": 60}     # standaard aangevuld
     assert State.load(tmp_path / "ontbreekt.json").seq == -1
 
 

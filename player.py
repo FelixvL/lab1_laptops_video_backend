@@ -2,15 +2,15 @@
 """
 LAB-1 Lobby — kiosk-videospeler.   Starten:   python player.py
 
-Speelt fullscreen video's uit de map `videos/` (of toont de lobby-website) en
-wordt op afstand aangestuurd via het PHP-beheerpaneel (zie settings.json).
+Speelt fullscreen video's uit de map `videos/`, desgewenst met het filmprogramma van
+LAB-1 als tekstlaag erover, en wordt op afstand aangestuurd via het PHP-beheerpaneel
+(zie settings.json).
 
 Opties:
   --windowed      gewoon venster in plaats van fullscreen kiosk (voor testen)
   --settings PAD  ander settings.json
 
-Vereist: PyQt6, python-mpv, libmpv-2.dll (C:\\mpv of naast dit bestand) en Microsoft Edge
-(of Chrome) voor de website-modus.
+Vereist: PyQt6, python-mpv, libmpv-2.dll (C:\\mpv of naast dit bestand).
 Afsluiten voor onderhoud: Ctrl+Q.
 """
 

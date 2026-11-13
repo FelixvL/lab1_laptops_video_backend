@@ -2,7 +2,7 @@
 CinePlayer — verbinding met het PHP-paneel.
 
 De speler meldt zich elke `poll_seconds` bij api.php?action=poll: hij stuurt zijn
-status (modus, video, positie, videolijst) en krijgt de actuele opdracht terug.
+status (video, positie, tekstlaag, videolijst) en krijgt de actuele opdracht terug.
 Zo hoeft er op de laptop geen poort open en werkt het achter elke router.
 
 `post_status()` is een gewone functie (testbaar zonder Qt); `Poller` draait die

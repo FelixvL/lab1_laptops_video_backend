@@ -39,3 +39,5 @@ desktop.ini
 # ── libmpv naast player.py (download apart) ──────────────────────────────
 libmpv-2.dll
 mpv-*.dll
+# programma van lab-1.nl, cache van de tekstlaag
+programma-cache.json
