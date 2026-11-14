@@ -17,16 +17,21 @@ cineplayer/
   config.py            settings.json (jij) en state.json (laatste opdracht, voor herstart)
   library.py           videomap inlezen, natuurlijk gesorteerd, submappen gegroepeerd
   remote.py            poller: status posten, opdracht ontvangen (QThread, urllib)
-  controller.py        libmpv: koppelen aan venster, afspelen in herhaling, positie
+  controller.py        libmpv: koppelen aan venster, film in herhaling of speellijst, positie, springen
+  playlists.py         speellijsten importeren (.mpcpl, .m3u, .m3u8, .pls), bewaren, films opzoeken
   programma.py         filmprogramma van lab-1.nl/list2: feed lezen, lijst + highlight zoals de site
   overlay.py           tekstlaag tekenen (Bebas Neue, maten uit de CSS van de site) als QImage
   tekstlaag.py         tekstlaag bijhouden: ophalen per minuut, hertekenen, in mpv zetten
   main_window.py       kioskvenster: rustscherm / video, opdrachten toepassen
+  settings_window.py   klein instellingenvenster na het kruisje: videomap, paneel, speellijsten
 fonts/                 Bebas Neue en Unibody 8 Pro (uit de lobby-website)
+playlists/             geïmporteerde speellijsten (per laptop, niet in git)
 tools/dev_server.py    lokale nabootsing van php/api.php om zonder hosting te testen
 tests/                 pytest voor library, config en de verbinding
 videos/                de video's (twee testvideo's meegeleverd)
 ```
 
-Afsluiten: beweeg de muis en klik op het kruisje rechtsboven (verdwijnt na 3 s), of Ctrl+Q.
-Logboek: `player.log`.
+Beweeg de muis en klik op het kruisje rechtsboven (verdwijnt na 3 s): de speler stopt en er
+blijft een klein instellingenvenster over (videomap, paneelgegevens, speellijsten importeren,
+speler weer starten). Ctrl+Q, of dat venster sluiten, sluit het programma af.
+Logboek: `player.log`. Uitleg voor Claude Code en de hele voorgeschiedenis: `CLAUDE.md`.
