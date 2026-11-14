@@ -41,3 +41,5 @@ libmpv-2.dll
 mpv-*.dll
 # programma van lab-1.nl, cache van de tekstlaag
 programma-cache.json
+# geimporteerde speellijsten (per laptop)
+playlists/

@@ -108,6 +108,7 @@ class Config:
     player_id: str = ""            # naam waarmee deze laptop zich meldt op het paneel (leeg = hostnaam)
     programma_url: str = "https://www.lab-1.nl/list2"   # feed met het filmprogramma (tekstlaag)
     overlay_uitlijning: dict[str, Any] | None = None     # optioneel: geheel/titel/lijst {x, y, s} zoals op de site
+    settings_path: Path = SETTINGS_FILE                  # waar deze instellingen vandaan komen (voor opslaan)
 
     @property
     def remote_enabled(self) -> bool:
@@ -117,6 +118,7 @@ class Config:
 def load_config(path: Path = SETTINGS_FILE) -> Config:
     d = _read_json(path)
     cfg = Config()
+    cfg.settings_path = Path(path)
     cfg.server_url = str(d.get("server_url") or "").strip()
     cfg.api_key = str(d.get("api_key") or "").strip()
     videos = str(d.get("videos_dir") or "videos")
@@ -132,9 +134,19 @@ def load_config(path: Path = SETTINGS_FILE) -> Config:
     return cfg
 
 
+def update_settings(path: Path, **changes: Any) -> bool:
+    """Sleutels in settings.json bijwerken (de rest blijft staan); voor het instellingenvenster."""
+    d = _read_json(Path(path))
+    d.update(changes)
+    return _write_json(Path(path), d)
+
+
 @dataclass
 class State:
-    video: str | None = None       # relatief pad binnen de videomap
+    video: str | None = None       # relatief pad binnen de videomap (één film in herhaling)
+    playlist: str | None = None    # naam van de speellijst die speelt (dan is `video` leeg)
+    playlist_pos: dict[str, dict[str, float]] = field(default_factory=dict)   # per speellijst: {index, pos}
+    skip_n: int = -1               # laatst toegepaste vorige/volgende-opdracht binnen een speellijst
     seq: int = -1                  # laatst toegepaste opdrachtvolgnummer (-1 = nog geen)
     rescan: int = 0
     overlay: dict[str, Any] = field(default_factory=lambda: parse_overlay(None))   # tekstlaag over de video
@@ -148,6 +160,19 @@ class State:
         st = cls()
         v = d.get("video")
         st.video = str(v) if isinstance(v, str) and v else None
+        v = d.get("playlist")
+        st.playlist = str(v) if isinstance(v, str) and v else None
+        pp = d.get("playlist_pos")
+        if isinstance(pp, dict):
+            for k, v in pp.items():
+                try:
+                    st.playlist_pos[str(k)] = {"index": int(v.get("index", 0)), "pos": round(float(v.get("pos", 0)), 1)}
+                except (AttributeError, TypeError, ValueError):
+                    pass
+        try:
+            st.skip_n = int(d.get("skip_n", -1))
+        except (TypeError, ValueError):
+            st.skip_n = -1
         try:
             st.seq = int(d.get("seq", -1))
         except (TypeError, ValueError):

@@ -3,6 +3,8 @@ CinePlayer — PlayerController: alles rond libmpv, zonder widgets.
 
 - `attach(wid)` koppelt mpv één keer aan het native videovenster
 - `play(path)` speelt een bestand in een oneindige herhaling (loop-file)
+- `play_list(paths, index)` speelt een speellijst achter elkaar en begint dan opnieuw
+  (mpv's eigen playlist met loop-playlist); `step(±1)` gaat naar de vorige/volgende film
 - 500 ms-poll → `position_changed(pos, dur, paused)` voor de statusmelding aan het paneel
 - `set_overlay(QImage)` legt een beeldlaag (BGRA, premultiplied) over het beeld via
   mpv's overlay-add; None haalt hem weg. Na een nieuwe `play()` wordt hij opnieuw gezet.
@@ -42,6 +44,8 @@ class PlayerController(QObject):
         self.path: str = ""
         self.duration: float = 0.0
         self._pending_start = 0.0       # hervatpositie, toegepast zodra de duur bekend is
+        self._list: list[str] = []      # speellijst (leeg = één film in herhaling)
+        self._list_offset = 0           # bij welke film de lijst aan mpv is aangeboden
         self._attached = False
         self._overlay = None            # QImage die mpv in gebruik heeft (moet in leven blijven)
         self._overlay_vorige = None     # de vorige, tot mpv zeker de nieuwe heeft
@@ -65,8 +69,10 @@ class PlayerController(QObject):
         tijd staat het beeld op pauze zodat je het begin niet even ziet."""
         self.path = path
         self.duration = 0.0
+        self._list, self._list_offset = [], 0
         self._pending_start = float(start) if start and start > 1.0 else 0.0
         try:
+            self.mpv["loop-playlist"] = "no"
             self.mpv["loop-file"] = "inf" if loop else "no"
             self.mpv.play(path)
             self.mpv.pause = self._pending_start > 0
@@ -80,6 +86,64 @@ class PlayerController(QObject):
             self._overlay_add(self._overlay)
         return True
 
+    def play_list(self, paths: list[str], index: int = 0, start: float = 0.0) -> bool:
+        """Speellijst: de films achter elkaar, daarna weer van voren. Begint bij `index` (en `start`
+        seconden in die film). mpv krijgt de lijst gedraaid aangeboden (index eerst), zodat hij
+        meteen de goede film laadt; de volgorde blijft daardoor gelijk."""
+        if not paths:
+            return False
+        index = index % len(paths)
+        order = paths[index:] + paths[:index]
+        self.path = order[0]
+        self.duration = 0.0
+        self._list, self._list_offset = list(paths), index
+        self._pending_start = float(start) if start and start > 1.0 else 0.0
+        try:
+            self.mpv["loop-file"] = "no"
+            self.mpv["loop-playlist"] = "inf"
+            self.mpv.command("loadfile", order[0], "replace")
+            for p in order[1:]:
+                self.mpv.command("loadfile", p, "append")
+            self.mpv.pause = self._pending_start > 0
+        except Exception as e:  # noqa: BLE001
+            _log.error("Speellijst laden mislukt: %s", e)
+            self.error.emit(str(e))
+            self.path = ""
+            self._list = []
+            return False
+        self.file_loaded.emit(order[0])
+        if self._overlay is not None:
+            self._overlay_add(self._overlay)
+        return True
+
+    def list_index(self) -> int:
+        """Welke film van de speellijst nu speelt (0-gebaseerd, in de oorspronkelijke volgorde); -1 zonder lijst."""
+        if not self._list:
+            return -1
+        try:
+            pos = self.mpv.playlist_pos
+        except Exception:  # noqa: BLE001
+            return -1
+        if pos is None or pos < 0:
+            return -1
+        return (int(pos) + self._list_offset) % len(self._list)
+
+    def step(self, delta: int) -> bool:
+        """Vorige/volgende film in de speellijst (loopt rond)."""
+        if not self._list:
+            return False
+        try:
+            pos = self.mpv.playlist_pos
+            if pos is None or pos < 0:
+                return False
+            self._pending_start = 0.0
+            self.mpv.playlist_pos = (int(pos) + int(delta)) % len(self._list)
+            self.mpv.pause = False
+            return True
+        except Exception as e:  # noqa: BLE001
+            _log.warning("speellijst-stap %s: %s", delta, e)
+            return False
+
     def stop(self) -> None:
         try:
             self.mpv.command("stop")
@@ -88,13 +152,15 @@ class PlayerController(QObject):
         self.path = ""
         self.duration = 0.0
         self._pending_start = 0.0
+        self._list = []
 
     def seek(self, delta: float) -> bool:
         """Zoveel seconden vooruit (of terug) in het lopende bestand."""
         if not self.path:
             return False
         try:
-            self.mpv.command("seek", float(delta), "relative")
+            # exact: anders springt mpv naar het volgende sleutelbeeld en dat kan seconden schelen
+            self.mpv.command("seek", float(delta), "relative+exact")
             return True
         except Exception as e:  # noqa: BLE001
             _log.warning("seek %s: %s", delta, e)

@@ -11,6 +11,7 @@ Meerdere spelers: elke speler meldt zich met zijn "id"; opdrachten gaan per spel
 Opdrachten geven (geen login nodig, alleen lokaal):
   curl -X POST "http://127.0.0.1:8765/api.php?action=command&player=lp" -d '{"cmd":"play","video":"Testvideo A.mp4"}'
   curl -X POST "http://127.0.0.1:8765/api.php?action=command" -d '{"cmd":"next"}'
+  curl -X POST "http://127.0.0.1:8765/api.php?action=command" -d '{"cmd":"playlist","name":"Avond"}'
   curl -X POST "http://127.0.0.1:8765/api.php?action=command" -d '{"cmd":"seek","delta":30}'
   curl -X POST "http://127.0.0.1:8765/api.php?action=command" -d '{"cmd":"overlay","aan":true,"modus":"avond","geschiedenis":30}'
   curl -X POST "http://127.0.0.1:8765/api.php?action=command" -d '{"cmd":"uitlijnen","element":"titel","dy":-0.5}'
@@ -36,7 +37,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 API_KEY = json.loads((Path(__file__).resolve().parent.parent / "settings.json").read_text("utf-8")).get("api_key", "")
 
-DEFAULT_COMMAND: dict = {"seq": 0, "video": None, "rescan": 0, "issued_at": 0, "seek": {"n": 0, "delta": 0},
+DEFAULT_COMMAND: dict = {"seq": 0, "video": None, "playlist": None, "rescan": 0, "issued_at": 0,
+                         "seek": {"n": 0, "delta": 0}, "skip": {"n": 0, "delta": 0},
                          "overlay": {"aan": False, "modus": "highlight", "geschiedenis": 30,
                                      "uitlijning": {"geheel": {"x": 0, "y": 7, "s": 95}, "titel": {"x": 0, "y": 3, "s": 60},
                                                     "lijst": {"x": 1, "y": 0, "s": 55}}}}
@@ -133,6 +135,14 @@ class Handler(BaseHTTPRequestHandler):
                 c = body.get("cmd")
                 if c == "play":
                     _command["video"] = body.get("video")
+                    _command["playlist"] = None
+                elif c == "playlist":
+                    _command["playlist"] = body.get("name")
+                    _command["video"] = None
+                elif c in ("next", "prev") and _command.get("playlist"):
+                    sk = _command.setdefault("skip", {"n": 0, "delta": 0})
+                    sk["n"] = int(sk.get("n", 0)) + 1
+                    sk["delta"] = 1 if c == "next" else -1
                 elif c in ("next", "prev") and videos:
                     try:
                         i = videos.index(_command.get("video"))

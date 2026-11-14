@@ -59,6 +59,8 @@ def main(argv: list[str] | None = None) -> int:
 
     app = QApplication(sys.argv[:1])
     app.setApplicationName("LAB-1 Lobby")
+    # Het kruisje verbergt de speler en laat het instellingenvenster over; afsluiten doet de speler zelf.
+    app.setQuitOnLastWindowClosed(False)
 
     try:
         import mpv  # noqa: F401
